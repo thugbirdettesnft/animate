@@ -7,6 +7,7 @@ import time
 from functools import partial
 from pathlib import Path
 
+import gc
 import cv2
 import imageio
 import numpy as np
