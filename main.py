@@ -28,6 +28,7 @@ from utils import get_MiDaS_samples, read_MiDaS_depth
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='argument.yml',help='Configure of post processing')
+parser.add_argument('--cache', type=str, help='the saved text file to use')
 args = parser.parse_args()
 config = yaml.load(open(args.config, 'r'))
 
