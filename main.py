@@ -58,6 +58,8 @@ def write_to_completed_path_file(path_finished):
     file.write(path_finished + '\n')
     file.close()
 
+load_completed_pathnames()
+
 # custom argument to pass in the name of the completed file
 
 
@@ -81,7 +83,7 @@ for idx in tqdm(range(len(sample_list))):
     torch.cuda.empty_cache()
     depth = None
     sample = sample_list[idx]
-    src_name = sample['src_pair_name']
+    src_name = str(sample['src_pair_name'])
     if src_name in completed_file_paths:
         print("already done " + str(src_name))
         continue
@@ -179,4 +181,5 @@ for idx in tqdm(range(len(sample_list))):
                         image.copy(), copy.deepcopy(sample['int_mtx']), config, image,
                         videos_poses, video_basename, config.get('original_h'), config.get('original_w'), border=border, depth=depth, normal_canvas=normal_canvas, all_canvas=all_canvas,
                         mean_loc_depth=mean_loc_depth)
-    write_to_completed_path_file(src_name)
+    write_to_completed_path_file(str(src_name))
+    print("adding to saved list" + str(src_name))
