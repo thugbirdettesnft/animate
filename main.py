@@ -1,32 +1,65 @@
-import numpy as np
 import argparse
+import copy
 import glob
 import os
-from functools import partial
-import vispy
-import scipy.misc as misc
-from tqdm import tqdm
-import yaml
-import time
 import sys
-from mesh import write_ply, read_ply, output_3d_photo
-from utils import get_MiDaS_samples, read_MiDaS_depth
-import torch
+import time
+from functools import partial
+from pathlib import Path
+
 import cv2
-from skimage.transform import resize
 import imageio
-import copy
-from networks import Inpaint_Color_Net, Inpaint_Depth_Net, Inpaint_Edge_Net
-from MiDaS.run import run_depth
-from boostmonodepth_utils import run_boostmonodepth
-from MiDaS.monodepth_net import MonoDepthNet
+import numpy as np
+import scipy.misc as misc
+import torch
+import vispy
+import yaml
+from skimage.transform import resize
+from tqdm import tqdm
+
 import MiDaS.MiDaS_utils as MiDaS_utils
 from bilateral_filtering import sparse_bilateral_filtering
+from boostmonodepth_utils import run_boostmonodepth
+from mesh import output_3d_photo, read_ply, write_ply
+from MiDaS.monodepth_net import MonoDepthNet
+from MiDaS.run import run_depth
+from networks import Inpaint_Color_Net, Inpaint_Depth_Net, Inpaint_Edge_Net
+from utils import get_MiDaS_samples, read_MiDaS_depth
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='argument.yml',help='Configure of post processing')
 args = parser.parse_args()
 config = yaml.load(open(args.config, 'r'))
+
+# START CACHE PART
+completed_txt_file_path = "../" + args.cache
+completed_file_paths = []
+
+def load_completed_pathnames():
+    my_file = Path(completed_txt_file_path)
+    print(my_file)
+    if my_file.is_file():
+        print("we have loaded this input before ", completed_txt_file_path)
+        file = open(completed_txt_file_path, 'r')
+        for line in file:#
+            if '\n' in line:
+                line = line[:-1]
+            completed_file_paths.add(line)
+            print("already completed path: ", line)
+        file.close()
+    else:
+        print("we have not loaded this folder before ", completed_txt_file_path)
+
+# Load the completed file paths
+def write_to_completed_path_file(path_finished):
+    file = open(completed_txt_file_path, 'a+')
+    completed_file_paths.add(path_finished)
+    file.write(path_finished + '\n')
+    file.close()
+
+# custom argument to pass in the name of the completed file
+
+
 if config['offscreen_rendering'] is True:
     vispy.use(app='egl')
 os.makedirs(config['mesh_folder'], exist_ok=True)
@@ -47,6 +80,10 @@ for idx in tqdm(range(len(sample_list))):
     torch.cuda.empty_cache()
     depth = None
     sample = sample_list[idx]
+    src_name = sample['src_pair_name']
+    if src_name in completed_file_paths:
+        print("already done " + str(src_name))
+        continue
     print("Current Source ==> ", sample['src_pair_name'])
     mesh_fi = os.path.join(config['mesh_folder'], sample['src_pair_name'] +'.ply')
     image = imageio.imread(sample['ref_img_fi'])
@@ -141,3 +178,4 @@ for idx in tqdm(range(len(sample_list))):
                         image.copy(), copy.deepcopy(sample['int_mtx']), config, image,
                         videos_poses, video_basename, config.get('original_h'), config.get('original_w'), border=border, depth=depth, normal_canvas=normal_canvas, all_canvas=all_canvas,
                         mean_loc_depth=mean_loc_depth)
+    write_to_completed_path_file(src_name)
