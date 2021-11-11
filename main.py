@@ -46,7 +46,7 @@ def load_completed_pathnames():
         for line in file:#
             if '\n' in line:
                 line = line[:-1]
-            completed_file_paths.add(line)
+            completed_file_paths.append(line)
             print("already completed path: ", line)
         file.close()
     else:
@@ -55,7 +55,7 @@ def load_completed_pathnames():
 # Load the completed file paths
 def write_to_completed_path_file(path_finished):
     file = open(completed_txt_file_path, 'a+')
-    completed_file_paths.add(path_finished)
+    completed_file_paths.append(path_finished)
     file.write(path_finished + '\n')
     file.close()
 
