@@ -183,4 +183,10 @@ for idx in tqdm(range(len(sample_list))):
                         videos_poses, video_basename, config.get('original_h'), config.get('original_w'), border=border, depth=depth, normal_canvas=normal_canvas, all_canvas=all_canvas,
                         mean_loc_depth=mean_loc_depth)
     write_to_completed_path_file(str(src_name))
+
+    if os.path.exists(mesh_fi):
+        os.remove(mesh_fi)
+        print("deleted mesh file")
+    else:
+        print("unable to delete mesh file")
     print("adding to saved list" + str(src_name))
